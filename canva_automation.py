@@ -10,24 +10,30 @@ from utils import clear_and_input, wait_for_download, capture_screenshot
 from config import OUTPUT_DIR
 
 
-def launch_canva(template_url: str, cookie_file: str, output_dir: str):
+def setup_canva_browser(template_url: str, cookie_file: str, output_dir: str):
     """啟動瀏覽器並載入 Canva Cookie。"""
     logging.info("啟動瀏覽器並載入 Canva 模板")
     options = uc.ChromeOptions()
+
+    # 基本設定
     options.add_argument("--disable-notifications")
+
+    # 下載相關設定
     chrome_prefs = {
         "download.default_directory": os.path.abspath(output_dir),
         "download.prompt_for_download": False,
         "download.directory_upgrade": True,
-        "safebrowsing.enabled": True,
+        "safeBrowse.enabled": True,
     }
     options.add_experimental_option("prefs", chrome_prefs)
+
     driver = None
     try:
         driver = uc.Chrome(options=options)
 
         driver.get("https://www.canva.com")
-        time.sleep(5)
+        # Wait for the body element to be present before adding cookies
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
         try:
             with open(cookie_file, "r") as f:
@@ -59,7 +65,13 @@ def launch_canva(template_url: str, cookie_file: str, output_dir: str):
         raise
 
     driver.get(template_url)
-    time.sleep(5)
+    
+    # Wait for the Canva editor's text fields to be present, which indicates the page is ready.
+    # This is more reliable than a fixed sleep.
+    WebDriverWait(driver, 30).until(
+        EC.presence_of_element_located((By.XPATH, '//div[@lang="zh-TW" and contains(@class, "AdBbhQ")]//span[@class="OYPEnA"]'))
+    )
+    
     return driver
 
 
@@ -78,7 +90,7 @@ def fill_template(driver, top_keywords, today_str: str):
 
     title_span = keyword_spans[0]
     clear_and_input(driver, title_span, f"今日熱搜 Top 7（日期:{today_str}）")
-    time.sleep(1)
+    # REMOVED: time.sleep(1) - Often not necessary after input. If issues occur, consider a targeted wait.
 
     for idx, keyword in enumerate(top_keywords):
         keyword_span_idx = 1 + idx * 2
@@ -87,7 +99,7 @@ def fill_template(driver, top_keywords, today_str: str):
         logging.info("執行關鍵字輸入: %s", keyword['topic'])
         keyword_span = keyword_spans[keyword_span_idx]
         clear_and_input(driver, keyword_span, f"{keyword['topic']} {keyword['search_count']:,}+")
-        time.sleep(1)
+        # REMOVED: time.sleep(1)
 
         logging.info("執行關聯詞輸入: %s", keyword['relate'])
         tag_span = keyword_spans[tag_span_idx]
@@ -95,26 +107,30 @@ def fill_template(driver, top_keywords, today_str: str):
         if len(display_relate) >= 20:
             display_relate = display_relate[:20] + "..."
         clear_and_input(driver, tag_span, f"#{display_relate}")
-        time.sleep(1)
+        # REMOVED: time.sleep(1)
 
 
 def download_image(driver, output_dir: str, file_name: str):
     """在 Canva 中下載圖片。"""
     try:
-        WebDriverWait(driver, 30).until(
+        # Wait for the 'Share' button to be clickable and then click it.
+        share_button = WebDriverWait(driver, 30).until(
             EC.element_to_be_clickable((By.XPATH, "//button[contains(., '分享')]"))
-        ).click()
-        time.sleep(1)
+        )
+        share_button.click()
 
-        WebDriverWait(driver, 20).until(
+        # Wait for the 'Download' button in the dropdown menu to be clickable.
+        download_menu_button = WebDriverWait(driver, 20).until(
             EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='下载']"))
-        ).click()
-        time.sleep(2)
+        )
+        download_menu_button.click()
 
-        WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[span[text()='下载']]"))
-        ).click()
-
+        time.sleep(3) # TODO 經測試必須等待才能成功點擊下載
+        # Wait for the final 'Download' button in the dialog to be clickable.
+        final_download_button = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[@type='submit' and span[text()='下载']]"))
+        )
+        final_download_button.click()
         wait_for_download(output_dir, file_name)
     except Exception as e:
         logging.error("下載圖片失敗: %s", e)
