@@ -90,7 +90,6 @@ def fill_template(driver, top_keywords, today_str: str):
 
     title_span = keyword_spans[0]
     clear_and_input(driver, title_span, f"今日熱搜 Top 7（日期:{today_str}）")
-    # REMOVED: time.sleep(1) - Often not necessary after input. If issues occur, consider a targeted wait.
 
     for idx, keyword in enumerate(top_keywords):
         keyword_span_idx = 1 + idx * 2
@@ -99,7 +98,6 @@ def fill_template(driver, top_keywords, today_str: str):
         logging.info("執行關鍵字輸入: %s", keyword['topic'])
         keyword_span = keyword_spans[keyword_span_idx]
         clear_and_input(driver, keyword_span, f"{keyword['topic']} {keyword['search_count']:,}+")
-        # REMOVED: time.sleep(1)
 
         logging.info("執行關聯詞輸入: %s", keyword['relate'])
         tag_span = keyword_spans[tag_span_idx]
@@ -107,8 +105,6 @@ def fill_template(driver, top_keywords, today_str: str):
         if len(display_relate) >= 20:
             display_relate = display_relate[:20] + "..."
         clear_and_input(driver, tag_span, f"#{display_relate}")
-        # REMOVED: time.sleep(1)
-
 
 def download_image(driver, output_dir: str, file_name: str):
     """在 Canva 中下載圖片。"""
