@@ -106,8 +106,8 @@ def fill_template(driver, top_keywords, today_str: str):
             display_relate = display_relate[:20] + "..."
         clear_and_input(driver, tag_span, f"#{display_relate}")
 
-def download_image(driver, output_dir: str, file_name: str):
-    """在 Canva 中下載圖片。"""
+def download_image(driver, output_dir: str, file_name: str) -> str:
+    """在 Canva 中下載圖片，並回傳檔案路徑。"""
     try:
         # Wait for the 'Share' button to be clickable and then click it.
         share_button = WebDriverWait(driver, 30).until(
@@ -127,7 +127,7 @@ def download_image(driver, output_dir: str, file_name: str):
             EC.element_to_be_clickable((By.XPATH, "//button[@type='submit' and span[text()='下载']]"))
         )
         final_download_button.click()
-        wait_for_download(output_dir, file_name)
+        return wait_for_download(output_dir, file_name)
     except Exception as e:
         logging.error("下載圖片失敗: %s", e)
         capture_screenshot(driver, output_dir, "download_error")

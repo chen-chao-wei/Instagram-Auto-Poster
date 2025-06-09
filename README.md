@@ -16,3 +16,15 @@ pip install -r requirements.txt
 2. 執行 `python main.py` 產生貼文圖片與文字。
 
 產出檔案將存於 `output/` 目錄。
+
+## 自動發佈至 Instagram
+
+若要在產生內容後直接發佈貼文，需再於 `.env` 設定：
+
+```
+IG_USER_ID=<你的 IG 使用者 ID>
+IG_ACCESS_TOKEN=<長效存取權杖>
+IMGUR_CLIENT_ID=<Imgur 應用程式的 Client ID>
+```
+
+腳本會自動將下載的圖片上傳至 Imgur，再以取得的連結發布 IG 貼文，可直接呼叫 `instagram_api.upload_and_publish()`。

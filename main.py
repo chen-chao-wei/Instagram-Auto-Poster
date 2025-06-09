@@ -2,7 +2,16 @@ from datetime import datetime
 import os
 import logging
 
-from settings import CANVA_TEMPLATE_URL, COOKIE_FILE, OUTPUT_DIR
+from settings import (
+    CANVA_TEMPLATE_URL,
+    COOKIE_FILE,
+    OUTPUT_DIR,
+    IG_USER_ID,
+    IG_ACCESS_TOKEN,
+    IMGUR_CLIENT_ID,
+)
+from instagram_api import upload_and_publish
+from imgur_api import upload_image
 from google_trends_api import get_google_trends
 from canva_automation import setup_canva_browser, fill_template, download_image
 from utils import capture_screenshot, get_unique_path, get_caption_file
@@ -33,15 +42,23 @@ def main():
     logging.info("\n已產出 IG 貼文文字：\n%s", '\n'.join(caption_lines))
 
     base_file = os.path.join(OUTPUT_DIR, f"{today.strftime('%Y%m%d')}_今日熱搜Top7.png")
-    file_path = get_unique_path(base_file)
-    file_name = os.path.basename(file_path)
+    file_name = os.path.basename(get_unique_path(base_file))
 
     driver = None
     try:
         driver = setup_canva_browser(CANVA_TEMPLATE_URL, COOKIE_FILE, OUTPUT_DIR)
         fill_template(driver, top_keywords, today_display)
-        download_image(driver, OUTPUT_DIR, file_name)
-        logging.info("腳本已完成今日流程，請到 IG 發文，使用下載圖與文字檔案。")
+        image_path = download_image(driver, OUTPUT_DIR, file_name)
+        logging.info("腳本已完成今日流程。")
+        if IG_USER_ID and IG_ACCESS_TOKEN and IMGUR_CLIENT_ID:
+            try:
+                image_url = upload_image(image_path)
+                upload_and_publish(image_url, "\n".join(caption_lines))
+                logging.info("已自動發佈至 Instagram")
+            except Exception as e:
+                logging.error("自動發佈失敗: %s", e)
+        else:
+            logging.info("未設定 IG 或 Imgur 相關環境變數，請手動發佈 IG 貼文。")
     except Exception as e:
         logging.critical(f"自動化過程發生錯誤: {e}", exc_info=True)
         if driver:
