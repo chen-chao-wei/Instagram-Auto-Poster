@@ -1,6 +1,9 @@
 import os
 import time
 import logging
+from datetime import datetime
+
+from settings import OUTPUT_DIR
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
@@ -79,3 +82,13 @@ def wait_for_download(download_dir: str, file_name: str, timeout: int = 120):
             return target_path
         time.sleep(1)
     raise Exception(f"下載超時，找不到 {search_name}！")
+
+
+def get_caption_file() -> str:
+    """取得今日的貼文文字檔路徑，若資料夾不存在則會建立。"""
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    base_path = os.path.join(
+        OUTPUT_DIR,
+        f"{datetime.today().strftime('%Y%m%d')}_post_caption.txt",
+    )
+    return get_unique_path(base_path)

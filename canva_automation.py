@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import undetected_chromedriver as uc
 
 from utils import clear_and_input, wait_for_download, capture_screenshot
-from config import OUTPUT_DIR
+from settings import OUTPUT_DIR
 
 
 def setup_canva_browser(template_url: str, cookie_file: str, output_dir: str):

@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 ## 使用方式
 
-1. 準備好 `config.py` 中設定的 Canva Cookie 與模板連結。
+1. 在 `.env` 或 `settings.py` 中設定 Canva Cookie 與模板連結。
 2. 執行 `python main.py` 產生貼文圖片與文字。
 
 產出檔案將存於 `output/` 目錄。
