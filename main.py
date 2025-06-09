@@ -2,10 +2,10 @@ from datetime import datetime
 import os
 import logging
 
-from config import CANVA_TEMPLATE_URL, COOKIE_FILE, OUTPUT_DIR, get_caption_file
+from settings import CANVA_TEMPLATE_URL, COOKIE_FILE, OUTPUT_DIR
 from google_trends_api import get_google_trends
 from canva_automation import setup_canva_browser, fill_template, download_image
-from utils import capture_screenshot, get_unique_path
+from utils import capture_screenshot, get_unique_path, get_caption_file
 
 def main():
     logging.basicConfig(
