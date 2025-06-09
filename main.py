@@ -1,12 +1,19 @@
 from datetime import datetime
 import os
+import logging
 
 from config import CANVA_TEMPLATE_URL, COOKIE_FILE, OUTPUT_DIR, get_caption_file
 from google_trends_api import get_google_trends
 from canva_automation import launch_canva, fill_template, download_image
+from utils import capture_screenshot
 
 
 def main():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+
     today = datetime.today()
     caption_file = get_caption_file()
 
@@ -24,17 +31,23 @@ def main():
     with open(caption_file, 'w') as f:
         f.write('\n'.join(caption_lines))
 
-    print("\n\U0001F4DD 已產出 IG 貼文文字：")
-    print('\n'.join(caption_lines))
+    logging.info("\n已產出 IG 貼文文字：\n%s", '\n'.join(caption_lines))
 
     file_name = f"{today.strftime('%Y%m%d')}_今日熱搜Top7.png"
-    driver = launch_canva(CANVA_TEMPLATE_URL, COOKIE_FILE, OUTPUT_DIR)
-    fill_template(driver, top_keywords, today_display)
-    download_image(driver, OUTPUT_DIR, file_name)
-
-    print("腳本已完成今日流程，請到 IG 發文，使用下載圖與文字檔案。")
-    input("\n⏳ 完成下載後，請按 Enter 關閉瀏覽器...")
-    # driver.quit()
+    driver = None
+    try:
+        driver = launch_canva(CANVA_TEMPLATE_URL, COOKIE_FILE, OUTPUT_DIR)
+        fill_template(driver, top_keywords, today_display)
+        download_image(driver, OUTPUT_DIR, file_name)
+        logging.info("腳本已完成今日流程，請到 IG 發文，使用下載圖與文字檔案。")
+    except Exception as e:
+        logging.critical(f"自動化過程發生錯誤: {e}", exc_info=True)
+        if driver:
+            capture_screenshot(driver, OUTPUT_DIR, "critical_error")
+    finally:
+        if driver:
+            input("\n⏳ 完成下載後，請按 Enter 關閉瀏覽器...")
+            driver.quit()
 
 
 if __name__ == '__main__':
