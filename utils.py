@@ -8,6 +8,17 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
+def get_unique_path(path: str) -> str:
+    """Return a file path that does not overwrite existing files."""
+    base, ext = os.path.splitext(path)
+    counter = 1
+    unique_path = path
+    while os.path.exists(unique_path):
+        unique_path = f"{base}({counter}){ext}"
+        counter += 1
+    return unique_path
+
+
 def is_editable(element) -> bool:
     """判斷元素是否可編輯。"""
     return element.get_attribute("contenteditable") == "true"
@@ -57,7 +68,7 @@ def wait_for_download(download_dir: str, file_name: str, timeout: int = 120):
     """等待 Canva 下載完成，並將檔案重新命名。"""
     search_name = "search top7.png"
     search_path = os.path.join(download_dir, search_name)
-    target_path = os.path.join(download_dir, file_name)
+    target_path = get_unique_path(os.path.join(download_dir, file_name))
     end_time = time.time() + timeout
 
     while time.time() < end_time:
