@@ -16,7 +16,7 @@ def create_media(image_url: str, caption: str) -> str:
         "caption": caption,
         "access_token": IG_ACCESS_TOKEN,
     }
-    logging.info("\u767c\u8a00\u5230 Instagram ...")
+    logging.info("上傳 Instagram ...")
     resp = requests.post(endpoint, params=params)
     try:
         resp.raise_for_status()

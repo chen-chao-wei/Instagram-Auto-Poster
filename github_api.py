@@ -38,5 +38,5 @@ def upload_image(file_path: str) -> str:
         download_url = (
             f"https://raw.githubusercontent.com/{GH_REPO}/{GH_BRANCH}/{file_name}"
         )
-    logging.info("GitHub \u4e0a\u50b3\u6210\u529f: %s", download_url)
+    logging.info("GitHub 上傳成功: %s", download_url)
     return download_url

@@ -41,7 +41,7 @@ def main():
 
     logging.info("\n已產出 IG 貼文文字：\n%s", '\n'.join(caption_lines))
 
-    base_file = os.path.join(OUTPUT_DIR, f"{today.strftime('%Y%m%d')}_今日熱搜Top7.png")
+    base_file = os.path.join(OUTPUT_DIR, f"{today.strftime('%Y%m%d')}_TodayTrendsTop7.png")
     file_name = os.path.basename(get_unique_path(base_file))
 
     driver = None
@@ -65,9 +65,7 @@ def main():
             capture_screenshot(driver, OUTPUT_DIR, "critical_error")
     finally:
         if driver:
-            input("\n⏳ 完成下載後，請按 Enter 關閉瀏覽器...")
             driver.quit()
-
 
 if __name__ == '__main__':
     main()

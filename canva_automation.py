@@ -3,10 +3,12 @@ import time
 import logging
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
 import undetected_chromedriver as uc
 
-from utils import clear_and_input, wait_for_download, capture_screenshot
+from utils import wait_for_download, capture_screenshot
 from settings import OUTPUT_DIR
 
 
@@ -74,6 +76,37 @@ def setup_canva_browser(template_url: str, cookie_file: str, output_dir: str):
     
     return driver
 
+def clear_and_input(driver, target_span_element, text_to_input):
+    """穩定地清空並輸入文字到指定元素。"""
+    actions = ActionChains(driver)
+    max_retry = 3
+    for attempt in range(1, max_retry + 1):
+        WebDriverWait(driver, 5).until(EC.visibility_of(target_span_element))
+        WebDriverWait(driver, 5).until(EC.element_to_be_clickable(target_span_element))
+        # print("雙擊目標span")
+        # print(driver)
+        actions.double_click(target_span_element).perform()
+        time.sleep(0.5)
+        try:
+            # print("找可編輯區域")
+            editable_div = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located((By.XPATH, "//div[@contenteditable='true']"))
+            )
+            # print(editable_div)
+            break
+        except Exception:
+            if attempt == max_retry:
+                raise
+            time.sleep(0.3)
+
+    editable_div.send_keys(Keys.END)
+    time.sleep(0.5)
+    current_text = editable_div.text
+    for _ in range(len(current_text)):
+        editable_div.send_keys(Keys.BACK_SPACE)
+        time.sleep(0.01)
+            
+    editable_div.send_keys(text_to_input)
 
 def fill_template(driver, top_keywords, today_str: str):
     """在 Canva 模板中填入關鍵字資料。"""
