@@ -70,8 +70,11 @@ def setup_canva_browser(template_url: str, cookie_file: str, output_dir: str):
     
     # Wait for the Canva editor's text fields to be present, which indicates the page is ready.
     # This is more reliable than a fixed sleep.
+    # WebDriverWait(driver, 30).until(
+    #     EC.presence_of_element_located((By.XPATH, '//div[@lang="zh-TW" and contains(@class, "AdBbhQ")]//span[@class="OYPEnA"]'))
+    # )
     WebDriverWait(driver, 30).until(
-        EC.presence_of_element_located((By.XPATH, '//div[@lang="zh-TW" and contains(@class, "AdBbhQ")]//span[@class="OYPEnA"]'))
+        lambda driver: driver.execute_script("return document.readyState") == "complete"
     )
     
     return driver
@@ -83,61 +86,106 @@ def clear_and_input(driver, target_span_element, text_to_input):
     for attempt in range(1, max_retry + 1):
         WebDriverWait(driver, 5).until(EC.visibility_of(target_span_element))
         WebDriverWait(driver, 5).until(EC.element_to_be_clickable(target_span_element))
-        # print("雙擊目標span")
-        # print(driver)
+        logging.info(f"雙擊span:{target_span_element.text}")
         actions.double_click(target_span_element).perform()
-        time.sleep(0.5)
+        time.sleep(0.2)
+
         try:
-            # print("找可編輯區域")
             editable_div = WebDriverWait(driver, 5).until(
                 EC.presence_of_element_located((By.XPATH, "//div[@contenteditable='true']"))
             )
-            # print(editable_div)
+            logging.info(f"找到可編輯區塊:{editable_div.text}")
             break
         except Exception:
             if attempt == max_retry:
                 raise
-            time.sleep(0.3)
-
     editable_div.send_keys(Keys.END)
-    time.sleep(0.5)
+    time.sleep(0.3)
     current_text = editable_div.text
     for _ in range(len(current_text)):
         editable_div.send_keys(Keys.BACK_SPACE)
         time.sleep(0.01)
-            
+    logging.info(f"輸入:{text_to_input}")
     editable_div.send_keys(text_to_input)
+    time.sleep(0.3)
+    actions.send_keys(Keys.ESCAPE).perform()
+    actions.send_keys(Keys.ESCAPE).perform()
 
-def fill_template(driver, top_keywords, today_str: str):
-    """在 Canva 模板中填入關鍵字資料。"""
-    try:
-        keyword_spans = driver.find_elements(By.XPATH, '//div[@lang="zh-TW" and contains(@class, "AdBbhQ")]//span[@class="OYPEnA"]')
-    except Exception as e:
-        logging.error("取得模板欄位失敗: %s", e)
-        capture_screenshot(driver, OUTPUT_DIR, "fill_error")
-        raise
-    keyword_spans = sorted(keyword_spans, key=lambda el: el.location['y'])
+def fill_template(driver, top_keywords, today_str: str, mode: str = "fill", cta_str: str = "你今天查了哪一個? 分享給你的朋友吧!"):
+    """在 Canva 模板中填入關鍵字資料或還原為預設文字。"""
+    expected_labels = [
+        "EnterTitle", "EnterKey1", "EnterTag1", "EnterKey2", "EnterTag2",
+        "EnterKey3", "EnterTag3", "EnterKey4", "EnterTag4", "EnterKey5",
+        "EnterTag5", "EnterKey6", "EnterTag6", "EnterKey7", "EnterTag7", "EnterCTA"
+    ]
 
-    if len(keyword_spans) < 16:
-        logging.warning("可用欄位 %s 不足，至少需 16 個", len(keyword_spans))
-
-    title_span = keyword_spans[0]
-    clear_and_input(driver, title_span, f"今日熱搜 Top 7（日期:{today_str}）")
-
-    for idx, keyword in enumerate(top_keywords):
-        keyword_span_idx = 1 + idx * 2
-        tag_span_idx = keyword_span_idx + 1
-
-        logging.info("執行關鍵字輸入: %s", keyword['topic'])
-        keyword_span = keyword_spans[keyword_span_idx]
-        clear_and_input(driver, keyword_span, f"{keyword['topic']} {keyword['search_count']:,}+")
-
-        logging.info("執行關聯詞輸入: %s", keyword['relate'])
-        tag_span = keyword_spans[tag_span_idx]
-        display_relate = keyword['relate']
+    # 預先處理 display_relate 字串長度
+    processed_keywords = []
+    for kw in top_keywords:
+        display_relate = kw["relate"]
         if len(display_relate) >= 20:
             display_relate = display_relate[:20] + "..."
-        clear_and_input(driver, tag_span, f"#{display_relate}")
+        processed_keywords.append({
+            "topic": kw["topic"],
+            "search_count": kw["search_count"],
+            "relate": display_relate
+        })
+
+    if (mode == "fill"):
+        keyword_spans = []
+        for label in expected_labels:
+            try:
+                span = driver.find_element(By.XPATH, f'//div[@lang="zh-TW"]//span[text()="{label}"]')
+                keyword_spans.append(span)
+            except Exception:
+                logging.error(f"找不到模板標籤文字: {label}")
+                capture_screenshot(driver, OUTPUT_DIR, f"missing_{label}")
+                raise
+        
+    if (mode == "reset"):
+        try:
+            # 取得 title 與 CTA span
+            title_span = driver.find_element(By.XPATH, f'//div[@lang="zh-TW"]//span[contains(text(), "今日熱搜 Top 7（日期:{today_str}）")]')
+            cta_span = driver.find_element(By.XPATH, f'//div[@lang="zh-TW"]//span[text()="{cta_str}"]')
+
+            # 合併順序 title -> key -> CTA
+            keyword_spans = [title_span]
+            for label in processed_keywords:
+                topic_span = driver.find_element(By.XPATH, f'//div[@lang="zh-TW"]//span[text()="{label["topic"]} {label["search_count"]:,}+"]')
+                relate_span = driver.find_element(By.XPATH, f'//div[@lang="zh-TW"]//span[text()="#{label["relate"]}"]')
+                keyword_spans.append(topic_span)
+                keyword_spans.append(relate_span)
+            keyword_spans.append(cta_span)
+        except Exception:
+            logging.error(f"找不到模板標籤文字: {label}")
+            capture_screenshot(driver, OUTPUT_DIR, f"missing_{label}")
+            raise
+
+    if len(keyword_spans) != len(expected_labels):
+        logging.error("可用欄位 %s 不等於預期數量 %s 個", len(keyword_spans), len(expected_labels))
+        capture_screenshot(driver, OUTPUT_DIR, "fill_error")
+        raise
+
+    if mode == "reset":
+        for span, label in zip(keyword_spans, expected_labels):
+            clear_and_input(driver, span, label)
+        return
+
+    # mode == "fill"
+    for idx, span in enumerate(keyword_spans):
+        if idx == 0:
+            clear_and_input(driver, span, f"今日熱搜 Top 7（日期:{today_str}）")
+        elif 1 <= idx <= 14:
+            kw_idx = (idx - 1) // 2
+            if kw_idx >= len(processed_keywords):
+                continue
+            keyword = processed_keywords[kw_idx]
+            if idx % 2 == 1:
+                clear_and_input(driver, span, f"{keyword['topic']} {keyword['search_count']:,}+")
+            else:
+                clear_and_input(driver, span, f"#{keyword['relate']}")
+        elif idx == 15:
+            clear_and_input(driver, span, cta_str)
 
 def download_image(driver, output_dir: str, file_name: str) -> str:
     """在 Canva 中下載圖片，並回傳檔案路徑。"""
@@ -160,7 +208,17 @@ def download_image(driver, output_dir: str, file_name: str) -> str:
             EC.element_to_be_clickable((By.XPATH, "//button[@type='submit' and span[text()='下载']]"))
         )
         final_download_button.click()
-        return wait_for_download(output_dir, file_name)
+
+        path = wait_for_download(output_dir, file_name)
+        WebDriverWait(driver, 30).until(
+            lambda driver: driver.execute_script("return document.readyState") == "complete"
+        )
+        body = driver.find_element(By.TAG_NAME, 'body')
+        actions = ActionChains(driver)
+        actions.move_to_element_with_offset(body, 0, 0).click().perform()
+        time.sleep(0.3)
+        # time.sleep(10)
+        return path
     except Exception as e:
         logging.error("下載圖片失敗: %s", e)
         capture_screenshot(driver, output_dir, "download_error")

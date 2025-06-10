@@ -48,8 +48,12 @@ def main():
     try:
         driver = setup_canva_browser(CANVA_TEMPLATE_URL, COOKIE_FILE, OUTPUT_DIR)
         fill_template(driver, top_keywords, today_display)
+        logging.info("已使用關鍵字取代Canva模板預設字")
         image_path = download_image(driver, OUTPUT_DIR, file_name)
-        logging.info("腳本已完成今日流程。")
+        logging.info("PNG存擋完成")
+        fill_template(driver, top_keywords, today_display, "reset")
+        logging.info("已復原Canva模板預設字")
+
         if IG_USER_ID and IG_ACCESS_TOKEN and GH_TOKEN:
             try:
                 image_url = upload_image(image_path)
