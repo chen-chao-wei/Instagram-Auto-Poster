@@ -24,7 +24,8 @@ pip install -r requirements.txt
 ```
 IG_USER_ID=<你的 IG 使用者 ID>
 IG_ACCESS_TOKEN=<長效存取權杖>
-IMGUR_CLIENT_ID=<Imgur 應用程式的 Client ID>
+GH_TOKEN=<你的 GitHub Token>
+GH_REPO=chen-chao-wei/Image
 ```
 
-腳本會自動將下載的圖片上傳至 Imgur，再以取得的連結發布 IG 貼文，可直接呼叫 `instagram_api.upload_and_publish()`。
+腳本會將下載的圖片上傳到指定的 GitHub 儲存庫，再使用產生的連結發佈 IG 貼文，可直接呼叫 `instagram_api.upload_and_publish()`。

@@ -14,5 +14,7 @@ OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
 IG_USER_ID = os.getenv("IG_USER_ID", "")
 IG_ACCESS_TOKEN = os.getenv("IG_ACCESS_TOKEN", "")
 
-# Imgur 上傳設定
-IMGUR_CLIENT_ID = os.getenv("IMGUR_CLIENT_ID", "")
+# GitHub 上傳設定
+GH_TOKEN = os.getenv("GH_TOKEN", "")
+GH_REPO = os.getenv("GH_REPO", "chen-chao-wei/Image")
+GH_BRANCH = os.getenv("GH_BRANCH", "main")

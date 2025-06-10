@@ -8,10 +8,10 @@ from settings import (
     OUTPUT_DIR,
     IG_USER_ID,
     IG_ACCESS_TOKEN,
-    IMGUR_CLIENT_ID,
+    GH_TOKEN,
 )
 from instagram_api import upload_and_publish
-from imgur_api import upload_image
+from github_api import upload_image
 from google_trends_api import get_google_trends
 from canva_automation import setup_canva_browser, fill_template, download_image
 from utils import capture_screenshot, get_unique_path, get_caption_file
@@ -50,7 +50,7 @@ def main():
         fill_template(driver, top_keywords, today_display)
         image_path = download_image(driver, OUTPUT_DIR, file_name)
         logging.info("腳本已完成今日流程。")
-        if IG_USER_ID and IG_ACCESS_TOKEN and IMGUR_CLIENT_ID:
+        if IG_USER_ID and IG_ACCESS_TOKEN and GH_TOKEN:
             try:
                 image_url = upload_image(image_path)
                 upload_and_publish(image_url, "\n".join(caption_lines))
@@ -58,7 +58,7 @@ def main():
             except Exception as e:
                 logging.error("自動發佈失敗: %s", e)
         else:
-            logging.info("未設定 IG 或 Imgur 相關環境變數，請手動發佈 IG 貼文。")
+            logging.info("未設定 IG 或 GitHub 相關環境變數，請手動發佈 IG 貼文。")
     except Exception as e:
         logging.critical(f"自動化過程發生錯誤: {e}", exc_info=True)
         if driver:
