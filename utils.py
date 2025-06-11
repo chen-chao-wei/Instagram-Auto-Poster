@@ -4,11 +4,6 @@ import logging
 from datetime import datetime
 
 from settings import OUTPUT_DIR
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 
 def get_unique_path(path: str) -> str:
@@ -20,40 +15,6 @@ def get_unique_path(path: str) -> str:
         unique_path = f"{base}({counter}){ext}"
         counter += 1
     return unique_path
-
-
-def is_editable(element) -> bool:
-    """判斷元素是否可編輯。"""
-    return element.get_attribute("contenteditable") == "true"
-
-
-def clear_and_input(driver, target_span_element, text_to_input):
-    """穩定地清空並輸入文字到指定元素。"""
-    actions = ActionChains(driver)
-    max_retry = 3
-    for attempt in range(1, max_retry + 1):
-        WebDriverWait(driver, 5).until(EC.visibility_of(target_span_element))
-        WebDriverWait(driver, 5).until(EC.element_to_be_clickable(target_span_element))
-        actions.double_click(target_span_element).perform()
-        time.sleep(0.5)
-        try:
-            editable_div = WebDriverWait(driver, 2).until(
-                EC.presence_of_element_located((By.XPATH, "//div[@contenteditable='true']"))
-            )
-            break
-        except Exception:
-            if attempt == max_retry:
-                raise
-            time.sleep(0.3)
-
-    editable_div.send_keys(Keys.END)
-    time.sleep(0.5)
-    current_text = editable_div.text
-    for _ in range(len(current_text)):
-        editable_div.send_keys(Keys.BACK_SPACE)
-        time.sleep(0.01)
-    editable_div.send_keys(text_to_input)
-
 
 def capture_screenshot(driver, output_dir: str, prefix: str = "error") -> str:
     """截圖並返回檔案路徑。"""

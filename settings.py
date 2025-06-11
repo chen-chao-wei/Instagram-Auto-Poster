@@ -9,3 +9,12 @@ CANVA_TEMPLATE_URL = os.getenv(
 )
 COOKIE_FILE = os.getenv("COOKIE_FILE", "canva_cookies.txt")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
+
+# Instagram API 設定
+IG_USER_ID = os.getenv("IG_USER_ID", "")
+IG_ACCESS_TOKEN = os.getenv("IG_ACCESS_TOKEN", "")
+
+# GitHub 上傳設定
+GH_TOKEN = os.getenv("GH_TOKEN", "")
+GH_REPO = os.getenv("GH_REPO", "chen-chao-wei/Image")
+GH_BRANCH = os.getenv("GH_BRANCH", "main")

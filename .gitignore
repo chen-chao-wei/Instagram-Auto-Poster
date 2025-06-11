@@ -3,3 +3,7 @@ canva_cookies.txt
 放大鏡.png
 __pycache__/
 .env
+Canva_div.txt
+build/
+dist/
+app.spec
