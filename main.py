@@ -39,7 +39,7 @@ def main():
     with open(caption_file, 'w') as f:
         f.write('\n'.join(caption_lines))
 
-    logging.info("\n已產出 IG 貼文文字：\n%s", '\n'.join(caption_lines))
+    logging.info("已產出 IG 貼文文字")
 
     base_file = os.path.join(OUTPUT_DIR, f"{today.strftime('%Y%m%d')}_TodayTrendsTop7.png")
     file_name = os.path.basename(get_unique_path(base_file))
@@ -57,8 +57,8 @@ def main():
         if IG_USER_ID and IG_ACCESS_TOKEN and GH_TOKEN:
             try:
                 # TODO 先測試打包程式 此段先註解
-                # image_url = upload_image(image_path)
-                # upload_and_publish(image_url, "\n".join(caption_lines))
+                image_url = upload_image(image_path)
+                upload_and_publish(image_url, "\n".join(caption_lines))
                 logging.info("已自動發佈至 Instagram")
             except Exception as e:
                 logging.error("自動發佈失敗: %s", e)
