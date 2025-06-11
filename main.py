@@ -56,8 +56,9 @@ def main():
 
         if IG_USER_ID and IG_ACCESS_TOKEN and GH_TOKEN:
             try:
-                image_url = upload_image(image_path)
-                upload_and_publish(image_url, "\n".join(caption_lines))
+                # TODO 先測試打包程式 此段先註解
+                # image_url = upload_image(image_path)
+                # upload_and_publish(image_url, "\n".join(caption_lines))
                 logging.info("已自動發佈至 Instagram")
             except Exception as e:
                 logging.error("自動發佈失敗: %s", e)

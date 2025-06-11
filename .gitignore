@@ -4,3 +4,6 @@ canva_cookies.txt
 __pycache__/
 .env
 Canva_div.txt
+build/
+dist/
+app.spec
