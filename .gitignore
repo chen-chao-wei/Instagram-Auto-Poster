@@ -1,4 +1,4 @@
-output
+exports
 canva_cookies.txt
 放大鏡.png
 __pycache__/
@@ -6,4 +6,7 @@ __pycache__/
 Canva_div.txt
 build/
 dist/
+*.spec
 app.spec
+logs/
+.DS_Store

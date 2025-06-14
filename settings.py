@@ -8,7 +8,7 @@ CANVA_TEMPLATE_URL = os.getenv(
     "https://www.canva.com/design/DAGpqS08mgg/ETfC__j_GCjnc3h0sG2haw/edit",
 )
 COOKIE_FILE = os.getenv("COOKIE_FILE", "canva_cookies.txt")
-OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
+EXPORT_DIR = os.path.join(os.path.dirname(__file__), "exports")
 
 # Instagram API 設定
 IG_USER_ID = os.getenv("IG_USER_ID", "")

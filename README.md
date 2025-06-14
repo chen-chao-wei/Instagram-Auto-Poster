@@ -15,7 +15,7 @@ pip install -r requirements.txt
 1. 在 `.env` 或 `settings.py` 中設定 Canva Cookie 與模板連結。
 2. 執行 `python main.py` 產生貼文圖片與文字。
 
-產出檔案將存於 `output/` 目錄。
+產出檔案將存於 `exports/` 目錄。
 
 ## 自動發佈至 Instagram
 

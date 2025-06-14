@@ -1,11 +1,13 @@
 from datetime import datetime
 import os
 import logging
+import sys
+import multiprocessing
 
 from settings import (
     CANVA_TEMPLATE_URL,
     COOKIE_FILE,
-    OUTPUT_DIR,
+    EXPORT_DIR,
     IG_USER_ID,
     IG_ACCESS_TOKEN,
     GH_TOKEN,
@@ -17,14 +19,21 @@ from canva_automation import setup_canva_browser, fill_template, download_image
 from utils import capture_screenshot, get_unique_path, get_caption_file
 
 def main():
+    today = datetime.today()
+
+    # 確保logs資料夾存在
+    logs_dir = os.path.join(os.path.dirname(__file__), 'logs')
+    os.makedirs(logs_dir, exist_ok=True)
+
     logging.basicConfig(
+        filename = os.path.join(logs_dir, f"{today.strftime('%Y%m%d')}_app.log"),
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
 
-    today = datetime.today()
+    # 取貼文文字檔路徑
     caption_file = get_caption_file()
-
+    # 取得 Google Trends 熱門關鍵字。
     top_keywords = get_google_trends(7)
 
     today_display = today.strftime('%-m/%-d')
@@ -41,24 +50,24 @@ def main():
 
     logging.info("已產出 IG 貼文文字")
 
-    base_file = os.path.join(OUTPUT_DIR, f"{today.strftime('%Y%m%d')}_TodayTrendsTop7.png")
-    file_name = os.path.basename(get_unique_path(base_file))
+    image_name = os.path.basename(get_unique_path(os.path.join(EXPORT_DIR, f"{today.strftime('%Y%m%d')}_TodayTrendsTop7.png")))
+    
 
     driver = None
     try:
-        driver = setup_canva_browser(CANVA_TEMPLATE_URL, COOKIE_FILE, OUTPUT_DIR)
-        fill_template(driver, top_keywords, today_display)
-        logging.info("已使用關鍵字取代Canva模板預設字")
-        image_path = download_image(driver, OUTPUT_DIR, file_name)
-        logging.info("PNG存擋完成")
-        fill_template(driver, top_keywords, today_display, "reset")
-        logging.info("已復原Canva模板預設字")
+        driver = setup_canva_browser(CANVA_TEMPLATE_URL, COOKIE_FILE, EXPORT_DIR)
+        # fill_template(driver, top_keywords, today_display)
+        # logging.info("已使用關鍵字取代Canva模板預設字")
+        # image_path = download_image(driver, EXPORT_DIR, image_name)
+        # logging.info("PNG存擋完成")
+        # fill_template(driver, top_keywords, today_display, "reset")
+        # logging.info("已復原Canva模板預設字")
 
         if IG_USER_ID and IG_ACCESS_TOKEN and GH_TOKEN:
             try:
                 # TODO 先測試打包程式 此段先註解
-                image_url = upload_image(image_path)
-                upload_and_publish(image_url, "\n".join(caption_lines))
+                # image_url = upload_image(image_path)
+                # upload_and_publish(image_url, "\n".join(caption_lines))
                 logging.info("已自動發佈至 Instagram")
             except Exception as e:
                 logging.error("自動發佈失敗: %s", e)
@@ -67,10 +76,15 @@ def main():
     except Exception as e:
         logging.critical(f"自動化過程發生錯誤: {e}", exc_info=True)
         if driver:
-            capture_screenshot(driver, OUTPUT_DIR, "critical_error")
+            capture_screenshot(driver, EXPORT_DIR, "critical_error")
     finally:
         if driver:
+            logging.info("關閉browser")
+            driver.close()
             driver.quit()
+        logging.info("已完成今日自動發文腳本")
+        sys.exit()
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
     main()

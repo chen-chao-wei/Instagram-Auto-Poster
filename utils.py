@@ -3,7 +3,7 @@ import time
 import logging
 from datetime import datetime
 
-from settings import OUTPUT_DIR
+from settings import EXPORT_DIR
 
 
 def get_unique_path(path: str) -> str:
@@ -27,7 +27,6 @@ def capture_screenshot(driver, output_dir: str, prefix: str = "error") -> str:
         logging.error("截圖失敗: %s", e)
     return file_path
 
-
 def wait_for_download(download_dir: str, file_name: str, timeout: int = 120):
     """等待 Canva 下載完成，並將檔案重新命名。"""
     search_name = "search top7.png"
@@ -47,9 +46,10 @@ def wait_for_download(download_dir: str, file_name: str, timeout: int = 120):
 
 def get_caption_file() -> str:
     """取得今日的貼文文字檔路徑，若資料夾不存在則會建立。"""
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    os.makedirs(EXPORT_DIR, exist_ok=True)
     base_path = os.path.join(
-        OUTPUT_DIR,
+        EXPORT_DIR,
         f"{datetime.today().strftime('%Y%m%d')}_post_caption.txt",
     )
     return get_unique_path(base_path)

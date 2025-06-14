@@ -9,10 +9,10 @@ from selenium.webdriver.common.action_chains import ActionChains
 import undetected_chromedriver as uc
 
 from utils import wait_for_download, capture_screenshot
-from settings import OUTPUT_DIR
+from settings import EXPORT_DIR
 
 
-def setup_canva_browser(template_url: str, cookie_file: str, output_dir: str):
+def setup_canva_browser(template_url: str, cookie_file: str, download_dir: str):
     """啟動瀏覽器並載入 Canva Cookie。"""
     logging.info("啟動瀏覽器並載入 Canva 模板")
     options = uc.ChromeOptions()
@@ -22,7 +22,7 @@ def setup_canva_browser(template_url: str, cookie_file: str, output_dir: str):
 
     # 下載相關設定
     chrome_prefs = {
-        "download.default_directory": os.path.abspath(output_dir),
+        "download.default_directory": os.path.abspath(download_dir),
         "download.prompt_for_download": False,
         "download.directory_upgrade": True,
         "safeBrowse.enabled": True,
@@ -53,17 +53,17 @@ def setup_canva_browser(template_url: str, cookie_file: str, output_dir: str):
         except FileNotFoundError:
             logging.error("找不到 Cookie 檔案: %s", cookie_file)
             if driver:
-                capture_screenshot(driver, OUTPUT_DIR, "cookie_error")
+                capture_screenshot(driver, EXPORT_DIR, "cookie_error")
             raise
         except Exception as e:
             logging.error("載入 Cookie 發生錯誤: %s", e)
             if driver:
-                capture_screenshot(driver, OUTPUT_DIR, "cookie_error")
+                capture_screenshot(driver, EXPORT_DIR, "cookie_error")
             raise
     except Exception as e:
         logging.error("啟動瀏覽器失敗: %s", e)
         if driver:
-            capture_screenshot(driver, OUTPUT_DIR, "launch_error")
+            capture_screenshot(driver, EXPORT_DIR, "launch_error")
         raise
 
     driver.get(template_url)
@@ -143,7 +143,7 @@ def fill_template(driver, top_keywords, today_str: str, mode: str = "fill", cta_
                 keyword_spans.append(span)
             except Exception:
                 logging.error(f"找不到模板標籤文字: {label}")
-                capture_screenshot(driver, OUTPUT_DIR, f"missing_{label}")
+                capture_screenshot(driver, EXPORT_DIR, f"missing_{label}")
                 raise
         
     if (mode == "reset"):
@@ -162,12 +162,12 @@ def fill_template(driver, top_keywords, today_str: str, mode: str = "fill", cta_
             keyword_spans.append(cta_span.text)
         except Exception:
             logging.error(f"找不到模板標籤文字: {label}")
-            capture_screenshot(driver, OUTPUT_DIR, f"missing_{label}")
+            capture_screenshot(driver, EXPORT_DIR, f"missing_{label}")
             raise
 
     if len(keyword_spans) != len(expected_labels):
         logging.error("可用欄位 %s 不等於預期數量 %s 個", len(keyword_spans), len(expected_labels))
-        capture_screenshot(driver, OUTPUT_DIR, "fill_error")
+        capture_screenshot(driver, EXPORT_DIR, "fill_error")
         raise
 
     if mode == "reset":
@@ -191,7 +191,7 @@ def fill_template(driver, top_keywords, today_str: str, mode: str = "fill", cta_
         elif idx == 15:
             clear_and_input(driver, span.text, cta_str)
 
-def download_image(driver, output_dir: str, file_name: str) -> str:
+def download_image(driver, download_dir: str, file_name: str) -> str:
     """在 Canva 中下載圖片，並回傳檔案路徑。"""
     try:
         # Wait for the 'Share' button to be clickable and then click it.
@@ -213,7 +213,7 @@ def download_image(driver, output_dir: str, file_name: str) -> str:
         )
         final_download_button.click()
 
-        path = wait_for_download(output_dir, file_name)
+        path = wait_for_download(EXPORT_DIR, file_name)
         WebDriverWait(driver, 30).until(
             lambda driver: driver.execute_script("return document.readyState") == "complete"
         )
@@ -225,5 +225,5 @@ def download_image(driver, output_dir: str, file_name: str) -> str:
         return path
     except Exception as e:
         logging.error("下載圖片失敗: %s", e)
-        capture_screenshot(driver, output_dir, "download_error")
+        capture_screenshot(driver, download_dir, "download_error")
         raise
