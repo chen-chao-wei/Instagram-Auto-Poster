@@ -56,18 +56,17 @@ def main():
     driver = None
     try:
         driver = setup_canva_browser(CANVA_TEMPLATE_URL, COOKIE_FILE, EXPORT_DIR)
-        # fill_template(driver, top_keywords, today_display)
-        # logging.info("已使用關鍵字取代Canva模板預設字")
-        # image_path = download_image(driver, EXPORT_DIR, image_name)
-        # logging.info("PNG存擋完成")
-        # fill_template(driver, top_keywords, today_display, "reset")
-        # logging.info("已復原Canva模板預設字")
+        fill_template(driver, top_keywords, today_display)
+        logging.info("已使用關鍵字取代Canva模板預設字")
+        image_path = download_image(driver, EXPORT_DIR, image_name)
+        logging.info("PNG存擋完成")
+        fill_template(driver, top_keywords, today_display, "reset")
+        logging.info("已復原Canva模板預設字")
 
         if IG_USER_ID and IG_ACCESS_TOKEN and GH_TOKEN:
             try:
-                # TODO 先測試打包程式 此段先註解
-                # image_url = upload_image(image_path)
-                # upload_and_publish(image_url, "\n".join(caption_lines))
+                image_url = upload_image(image_path)
+                upload_and_publish(image_url, "\n".join(caption_lines))
                 logging.info("已自動發佈至 Instagram")
             except Exception as e:
                 logging.error("自動發佈失敗: %s", e)
